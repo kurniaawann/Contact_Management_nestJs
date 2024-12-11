@@ -3,6 +3,7 @@ import {
   Catch,
   ExceptionFilter,
   HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { ZodError } from 'zod';
 
@@ -12,25 +13,30 @@ export class ErrorFilter implements ExceptionFilter {
     const response = host.switchToHttp().getResponse();
 
     if (exception instanceof HttpException) {
+      const responseBody = exception.getResponse();
+      const message =
+        typeof responseBody === 'string'
+          ? responseBody
+          : responseBody['message'];
       response.status(exception.getStatus()).json({
-        code: 400,
-        error: exception.getResponse(),
+        statusCode: exception.getStatus(),
+        message: message,
       });
     } else if (exception instanceof ZodError) {
       const messages = exception.issues
         .map((issue) => {
-          const field = issue.path.join(', '); // Menggabungkan path menjadi string
-          return `${field} is required`; // Pesan spesifik untuk field
+          const field = issue.path.join(', ');
+          return `${field} is required`; // Custom message
         })
         .join(', ');
-      response.status(400).json({
-        code: 400,
-        error: messages,
+      response.status(HttpStatus.BAD_REQUEST).json({
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: messages,
       });
     } else {
-      response.status(500).json({
-        code: 500,
-        error: exception.message,
+      response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: exception.message,
       });
     }
   }
