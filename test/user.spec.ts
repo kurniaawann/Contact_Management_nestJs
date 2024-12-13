@@ -1,4 +1,4 @@
-import { INestApplication } from '@nestjs/common';
+import { HttpStatus, INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
@@ -33,7 +33,7 @@ describe('AppController (e2e)', () => {
           name: '',
         });
 
-      expect(response.status).toBe(400);
+      expect(response.status).toBe(HttpStatus.BAD_REQUEST);
       expect(response.body.errors).toBeUndefined();
     });
 
@@ -46,7 +46,7 @@ describe('AppController (e2e)', () => {
           name: 'test',
         });
 
-      expect(response.status).toBe(201);
+      expect(response.status).toBe(HttpStatus.CREATED);
       expect(response.body.data.username).toBe('test');
       expect(response.body.data.name).toBe('test');
     });
@@ -61,8 +61,41 @@ describe('AppController (e2e)', () => {
           name: 'test',
         });
 
-      expect(response.status).toBe(400);
-      expect(response.body.error).toBeDefined();
+      expect(response.status).toBe(HttpStatus.BAD_REQUEST);
+      expect(response.body.message).toBeDefined();
+    });
+  });
+
+  describe('Login', () => {
+    beforeEach(async () => {
+      await testService.deleteUser();
+      await testService.createUser();
+    });
+
+    it('Should be reject if request is invalid', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/api/users/login')
+        .send({
+          username: '',
+          password: '',
+        });
+
+      expect(response.status).toBe(HttpStatus.BAD_REQUEST);
+      expect(response.body.errors).toBeUndefined();
+    });
+
+    it('Should be able to login', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/api/users/login')
+        .send({
+          username: 'test',
+          password: 'test',
+        });
+
+      expect(response.status).toBe(HttpStatus.OK);
+      expect(response.body.data.username).toBe('test');
+      expect(response.body.data.name).toBe('test');
+      expect(response.body.data.token).toBeDefined();
     });
   });
 });
