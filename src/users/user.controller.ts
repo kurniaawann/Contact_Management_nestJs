@@ -17,4 +17,14 @@ export class UserController {
       data: result,
     };
   }
+  @Post('/login')
+  @HttpCode(200)
+  async login(
+    @Body() request: RegisterUserRequest,
+  ): Promise<WebResponse<UserResponse>> {
+    const result = await this.userService.loginService(request);
+    return {
+      data: result,
+    };
+  }
 }
