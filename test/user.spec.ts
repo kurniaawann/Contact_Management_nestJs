@@ -19,7 +19,7 @@ describe('AppController (e2e)', () => {
     await app.init();
   });
 
-  describe('POST', () => {
+  describe('POST register /api/users/register', () => {
     beforeEach(async () => {
       await testService.deleteUser();
     });
@@ -66,7 +66,7 @@ describe('AppController (e2e)', () => {
     });
   });
 
-  describe('Login', () => {
+  describe('POST Login /api/users/register', () => {
     beforeEach(async () => {
       await testService.deleteUser();
       await testService.createUser();
@@ -96,6 +96,31 @@ describe('AppController (e2e)', () => {
       expect(response.body.data.username).toBe('test');
       expect(response.body.data.name).toBe('test');
       expect(response.body.data.token).toBeDefined();
+    });
+  });
+  describe('GET Current User /api/users/current/user ', () => {
+    beforeEach(async () => {
+      await testService.deleteUser();
+      await testService.createUser();
+    });
+
+    it('Should be reject if token is invalid', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/api/users/current/user')
+        .set('Authorization', 'wrong');
+
+      expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+      expect(response.body.errors).toBeUndefined();
+    });
+
+    it('Should be able to get current user', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/api/users/current/user')
+        .set('Authorization', 'test');
+
+      expect(response.status).toBe(HttpStatus.OK);
+      expect(response.body.data.username).toBe('test');
+      expect(response.body.data.name).toBe('test');
     });
   });
 });
